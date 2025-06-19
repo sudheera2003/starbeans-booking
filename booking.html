@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Booking Calendar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .booking-container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        /* Calendar Section */
+        .calendar-section {
+            background: linear-gradient(135deg, #2d5a3d, #3a6b4a);
+            padding: 40px;
+            border-radius: 15px;
+            color: white;
+            min-width: 400px;
+        }
+
+        .calendar-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .calendar-title {
+            font-size: 2em;
+            font-weight: 300;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        .month-year-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .month-selector, .year-selector {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-arrow {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .nav-arrow:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .day-header {
+            text-align: center;
+            padding: 10px 0;
+            font-weight: 600;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .day-cell:hover {
+            background: rgba(255,255,255,0.1);
+            transform: scale(1.05);
+        }
+
+        .day-cell.selected {
+            background: rgba(255,255,255,0.2);
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+        }
+
+        .day-cell.other-month {
+            opacity: 0.3;
+        }
+
+        .day-cell.today {
+            background: rgba(255,255,255,0.15);
+            font-weight: bold;
+        }
+
+        /* Booking Form Section */
+        .form-section {
+            padding: 40px;
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            background: #f8f9fa;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3a6b4a;
+            background: white;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2d5a3d, #3a6b4a);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45,90,61,0.3);
+        }
+
+        .btn-secondary {
+            background: none;
+            color: #e74c3c;
+            border: 2px solid #e74c3c;
+        }
+
+        .btn-secondary:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .booking-container {
+                flex-direction: column;
+                margin: 10px;
+            }
+            
+            .calendar-section {
+                min-width: auto;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="booking-container">
+        <!-- Calendar Section -->
+        <div class="calendar-section">
+            <div class="calendar-header">
+                <h2 class="calendar-title">Choose a Date</h2>
+                <div class="month-year-selector">
+                    <select class="month-selector" id="monthSelect">
+                        <option value="0">January</option>
+                        <option value="1">February</option>
+                        <option value="2">March</option>
+                        <option value="3">April</option>
+                        <option value="4">May</option>
+                        <option value="5" selected>June</option>
+                        <option value="6">July</option>
+                        <option value="7">August</option>
+                        <option value="8">September</option>
+                        <option value="9">October</option>
+                        <option value="10">November</option>
+                        <option value="11">December</option>
+                    </select>
+                    <select class="year-selector" id="yearSelect">
+                        <option value="2024">2024</option>
+                        <option value="2025" selected>2025</option>
+                        <option value="2026">2026</option>
+                    </select>
+                    <button class="nav-arrow" onclick="nextMonth()">›</button>
+                </div>
+            </div>
+            
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- Calendar will be generated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Booking Form Section -->
+        <div class="form-section">
+            <form>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Your Name<span class="required">*</span></label>
+                        <input type="text" placeholder="Name here" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Your Email<span class="required">*</span></label>
+                        <input type="email" placeholder="Email here" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>How can we contact you?<span class="required">*</span></label>
+                    <input type="tel" placeholder="Phone Number here" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>From<span class="required">*</span></label>
+                        <input type="time" placeholder="Start time here" required>
+                    </div>
+                    <div class="form-group">
+                        <label>To<span class="required">*</span></label>
+                        <input type="time" placeholder="End time here" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Total Guests<span class="required">*</span></label>
+                    <select required>
+                        <option value="">Select number of guests</option>
+                        <option value="1" selected>1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8+</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Additional Information</label>
+                    <textarea placeholder="Enter Your Message here"></textarea>
+                </div>
+
+                <div class="buttons">
+                    <button type="submit" class="btn btn-primary">BOOK A TABLE</button>
+                    <a href="#" class="btn btn-secondary">Request Cancellation</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentMonth = 5; // June (0-indexed)
+        let currentYear = 2025;
+        let selectedDate = null;
+
+        function generateCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // Add day headers
+            const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            dayHeaders.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'day-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+
+            // Get first day of month and number of days
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+            // Add previous month's trailing days
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const dayCell = createDayCell(daysInPrevMonth - i, true);
+                grid.appendChild(dayCell);
+            }
+
+            // Add current month's days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = createDayCell(day, false);
+                grid.appendChild(dayCell);
+            }
+
+            // Add next month's leading days
+            const totalCells = grid.children.length - 7; // Subtract headers
+            const remainingCells = 42 - totalCells; // 6 rows × 7 days
+            for (let day = 1; day <= remainingCells; day++) {
+                const dayCell = createDayCell(day, true);
+                grid.appendChild(dayCell);
+            }
+        }
+
+        function createDayCell(day, isOtherMonth) {
+            const cell = document.createElement('div');
+            cell.className = 'day-cell';
+            cell.textContent = day;
+            
+            if (isOtherMonth) {
+                cell.classList.add('other-month');
+            }
+
+            // Highlight today
+            const today = new Date();
+            if (!isOtherMonth && day === today.getDate() && 
+                currentMonth === today.getMonth() && 
+                currentYear === today.getFullYear()) {
+                cell.classList.add('today');
+            }
+
+            cell.addEventListener('click', function() {
+                if (!isOtherMonth) {
+                    // Remove previous selection
+                    document.querySelectorAll('.day-cell.selected').forEach(el => {
+                        el.classList.remove('selected');
+                    });
+                    
+                    // Add selection to clicked date
+                    cell.classList.add('selected');
+                    selectedDate = day;
+                }
+            });
+
+            return cell;
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            updateSelectors();
+            generateCalendar();
+        }
+
+        function updateSelectors() {
+            document.getElementById('monthSelect').value = currentMonth;
+            document.getElementById('yearSelect').value = currentYear;
+        }
+
+        // Event listeners for selectors
+        document.getElementById('monthSelect').addEventListener('change', function() {
+            currentMonth = parseInt(this.value);
+            generateCalendar();
+        });
+
+        document.getElementById('yearSelect').addEventListener('change', function() {
+            currentYear = parseInt(this.value);
+            generateCalendar();
+        });
+
+        // Initialize calendar
+        generateCalendar();
+    </script>
+</body>
+</html>
